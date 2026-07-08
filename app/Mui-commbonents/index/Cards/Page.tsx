@@ -29,7 +29,15 @@ export default function Cards() {
     <section className="py-10 sm:py-14">
       <div className="container-custom">
         {/* Sticky search / filter bar */}
-        <div className="sticky top-[86px] z-30 mb-8">
+ 
+
+        <SectionHeader
+          title=" العيادات التخصصية"
+          subtitle="اختر العيادة التخصصية ثم استعرض جدول الأطباء المتاحين."
+        />
+
+
+               <div className="sticky top-[86px] z-30 mb-8">
           <div className="mx-auto w-full rounded-2xl border border-line bg-white/85 p-3 shadow-[0_10px_30px_-15px_rgba(15,34,51,0.2)] backdrop-blur-xl sm:p-4 lg:w-[92%]">
             <div className="flex flex-col items-stretch gap-4 md:flex-row md:items-center md:justify-between">
               <div className="relative w-full md:w-[42%]">
@@ -70,11 +78,6 @@ export default function Cards() {
             </div>
           </div>
         </div>
-
-        <SectionHeader
-          title=" العيادات التخصصية"
-          subtitle="اختر العيادة التخصصية ثم استعرض جدول الأطباء المتاحين."
-        />
 
         <StaggerGroup
           key={filter}

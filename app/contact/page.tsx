@@ -30,7 +30,7 @@ const BOOKING_CONTACT = {
 const PROJECTS_CONTACT = {
   title: "المشاريع",
   description: "للاستفسار عن المشاريع والشراكات والتعاون المؤسسي.",
-  phones: [{ display: "00970597715288", href: "tel:+972597706883" }],
+  phones: [{ display: "0597706883", href: "tel:+972597706883" }],
   email: { display: "project@pah.ps", href: "mailto:project@pah.ps" },
   
 } as const;

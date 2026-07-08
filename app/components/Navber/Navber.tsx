@@ -44,7 +44,7 @@ export default function Navbar() {
             <div className="relative shrink-0 ">
               <Image src={Logo} alt="logo" width={70} height={70} className=" object-contain" />
             </div>
-            <h3 className="hidden lg:block text-[#000000] bg-clip-text bg-gradient-to-l from-primary to-primary-light font-bold text-2xl leading-tight">
+            <h3 className="block text-[#000000] bg-clip-text bg-gradient-to-l from-primary to-primary-light font-bold text-sm sm:text-base md:text-lg lg:text-lg xl:text-xl leading-tight max-w-[210px]">
               جمعية الخدمة العامة
               <br />
               ومجموعة مستشفياتها

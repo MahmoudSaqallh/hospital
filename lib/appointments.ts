@@ -48,3 +48,14 @@ export function findAppointmentsByPhone(phone: string) {
   const appointments = JSON.parse(stored) as Appointment[];
   return appointments.filter((item) => item.phone === phone);
 }
+
+export function cancelAppointment(appointmentId: string) {
+  if (typeof window === "undefined") return;
+
+  const stored = localStorage.getItem(APPOINTMENTS_KEY);
+  if (!stored) return;
+
+  const appointments = JSON.parse(stored) as Appointment[];
+  const updated = appointments.filter((item) => item.id !== appointmentId);
+  localStorage.setItem(APPOINTMENTS_KEY, JSON.stringify(updated));
+}

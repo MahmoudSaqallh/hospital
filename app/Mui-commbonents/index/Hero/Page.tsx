@@ -27,25 +27,29 @@ export default function Hero() {
       <div aria-hidden className="blob animate-float-slow" style={{ top: "-4rem", left: "10%", width: "22rem", height: "22rem", background: "rgba(8,145,178,0.25)" }} />
       <div aria-hidden className="blob" style={{ bottom: "-6rem", right: "5%", width: "24rem", height: "24rem", background: "rgba(225,29,72,0.12)" }} />
 
-      <div className="container-custom relative py-16 text-center sm:py-24 lg:py-28">
+      <div className="container-custom relative pt-16 pb-8 text-center sm:pt-24 sm:pb-12 lg:pt-28 lg:pb-16">
 
 
         <Reveal delay={0.08}>
-          <h1 className="mx-auto mt-6 max-w-4xl text-red-700">
-    جمعية الخدمة العامة و مجموعة مستشفياتها<br className="hidden sm:block" />
-            <span className="text-gradient text-4xl">رعاية صحية متكاملة برؤية إنسانية في مكان واحد</span>
-          </h1>
+          <div className="mx-auto mt-6 max-w-4xl">
+            <h1 className="text-red-700 text-2xl sm:text-3xl lg:text-4xl">
+              جمعية الخدمة العامة و مجموعة مستشفياتها
+            </h1>
+            <p className="mt-2 text-gradient text-lg font-semibold sm:text-2xl lg:text-3xl">
+              رعاية صحية متكاملة برؤية إنسانية في مكان واحد
+            </p>
+          </div>
         </Reveal>
 
         <Reveal delay={0.16}>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-black sm:text-lg">
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-black sm:text-lg">
             مجهزون بأحدث التقنيات الطبية وكادر من الاستشاريين المتخصصين لضمان أفضل
             رعاية صحية لكم ولعائلاتكم في كل الأوقات.
           </p>
         </Reveal>
 
         <Reveal delay={0.24}>
-          <div className="mt-8 flex flex-col items-stretch justify-center gap-3 px-2 sm:flex-row sm:items-center">
+          <div className="mt-7 flex flex-col items-stretch justify-center gap-3 px-2 sm:flex-row sm:items-center">
             <Link href="/contact" className="btn-primary group">
               تواصل معنا
               <ArrowLeft size={18} className="transition-transform duration-300 group-hover:-translate-x-1" />
@@ -58,7 +62,7 @@ export default function Hero() {
         </Reveal>
 
         {/* Stats */}
-        <StaggerGroup className="mx-auto mt-14 grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-3">
+        <StaggerGroup className="mx-auto mt-12 sm:mt-14 grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-3">
           {stats.map((stat) => {
             const Icon = stat.icon;
             return (

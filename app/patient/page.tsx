@@ -2,14 +2,16 @@
 
 import { useState } from "react";
 import { CalendarClock, Search, Stethoscope, UserRound } from "lucide-react";
-import { findAppointmentsByPhone } from "@/lib/appointments";
+import { cancelAppointment, findAppointmentsByPhone, type Appointment } from "@/lib/appointments";
 import EmptyState from "@/app/components/ui/EmptyState";
 import NotFound from "../not-found";
+import { useRouter } from "next/navigation";
 
 export default function PatientPage() {
   const [phone, setPhone] = useState("");
   const [submitted, setSubmitted] = useState(false);
-  const appointments = submitted ? findAppointmentsByPhone(phone.trim()) : [];
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const router = useRouter();
 
   return (
     <section className="container-custom max-w-3xl py-8 sm:py-12">
@@ -26,6 +28,8 @@ export default function PatientPage() {
         className="card mt-6 p-6"
         onSubmit={(event) => {
           event.preventDefault();
+          const normalizedPhone = phone.trim();
+          setAppointments(findAppointmentsByPhone(normalizedPhone));
           setSubmitted(true);
         }}
       >
@@ -73,11 +77,27 @@ export default function PatientPage() {
                     {item.doctorName} - {item.day} - {item.slot}
                   </p>
                   <div className="mt-4 flex gap-2">
-                    <button type="button" className="rounded-xl border border-line px-3 py-1.5 text-xs font-semibold text-muted" disabled>
-                      إعادة جدولة (قريبا)
+                    <button
+                      type="button"
+                      className="rounded-xl border border-line px-3 py-1.5 text-xs font-semibold text-primary transition hover:border-primary/60 hover:bg-primary/5"
+                      onClick={() => {
+                        // Reschedule: open booking with the same clinic pre-selected
+                        router.push(`/booking?clinic=${item.clinicId}`);
+                      }}
+                    >
+                      إعادة جدولة
                     </button>
-                    <button type="button" className="rounded-xl border border-rose-200 px-3 py-1.5 text-xs font-semibold text-rose-600" disabled>
-                      إلغاء (قريبا)
+                    <button
+                      type="button"
+                      className="rounded-xl border border-rose-200 px-3 py-1.5 text-xs font-semibold text-rose-600 transition hover:bg-rose-50"
+                      onClick={() => {
+                        const ok = window.confirm("هل أنت متأكد من إلغاء الموعد؟");
+                        if (!ok) return;
+                        cancelAppointment(item.id);
+                        setAppointments((prev) => prev.filter((a) => a.id !== item.id));
+                      }}
+                    >
+                      إلغاء
                     </button>
                   </div>
                 </div>
