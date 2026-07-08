@@ -1,82 +1,255 @@
 @import "tailwindcss";
 
+/* =========================================================
+   DESIGN TOKENS (Tailwind v4 theme -> generates utilities)
+   Medical teal/blue primary, red as secondary accent.
+========================================================= */
+@theme {
+  /* Primary - medical teal / cyan */
+  --color-primary: #0e7490;
+  --color-primary-light: #22b8cf;
+  --color-primary-lighter: #67e8f9;
+  --color-primary-dark: #0b5563;
+  --color-primary-soft: #ecfeff;
 
+  /* Accent - red (secondary) */
+  --color-accent: #e11d48;
+  --color-accent-dark: #be123c;
+  --color-accent-soft: #fff1f2;
 
+  /* Support */
+  --color-success: #059669;
+  --color-whatsapp: #25d366;
+
+  /* Neutrals / surfaces */
+  --color-ink: #0f2233;
+  --color-muted: #5b6b7a;
+  --color-canvas: #f5f9fb;
+  --color-surface: #ffffff;
+  --color-line: #e4edf2;
+
+  /* Typography */
+  --font-sans: var(--font-ibm-plex), "IBM Plex Sans Arabic", sans-serif;
+
+  /* Radii */
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+}
 
 :root {
-  /* 🎨 Brand Colors */
-  --primary: #D32F2F;
-  --secondary: #388E3C;
-  --tertiary: #00799C;
+  /* Legacy brand vars kept for any older references */
+  --primary: #0e6c09;
+  --secondary: #059669;
+  --tertiary: #0e6c09;
 
-  /* ⚫ Neutral */
-  --neutral-900: #212121;
-  --neutral-700: #4B4B4B;
-  --neutral-500: #777777;
-  --neutral-300: #D9D9D9;
+  --neutral-900: #0f2233;
+  --neutral-700: #3f4f5c;
+  --neutral-500: #5b6b7a;
+  --neutral-300: #cbd7de;
 
+  --bg: #f5f9fb;
+  --card: #ffffff;
 
-  --bg: #F3F1F1;
-  --card: #EDE9E9;
+  --font-ibm-plex: "IBM Plex Sans Arabic", sans-serif;
 
-  /* ✍️ Fonts */
- --font-ibm-plex: "IBM Plex Sans", sans-serif;
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, #022400e9 0%, #075802a2 45%, #0e6c09 100%);
+  --gradient-primary-soft: linear-gradient(135deg, #ecfeff 0%, #f0fbff 60%, #eef7fb 100%);
+  --gradient-accent: linear-gradient(135deg, #e11d48 0%, #f43f5e 100%);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(15, 34, 51, 0.06), 0 1px 3px rgba(15, 34, 51, 0.04);
+  --shadow-md: 0 8px 24px -8px rgba(15, 34, 51, 0.14);
+  --shadow-lg: 0 20px 45px -18px rgba(58, 238, 103, 0.35);
+  --shadow-glow: 0 12px 40px -12px rgba(65, 249, 93, 0.45);
 }
 
 /* =========================
    BASE STYLES
 ========================= */
-
-html, body {
-  height: 100%;
-  background-color: var(--bg);
+html,
+body {
   color: var(--neutral-900);
-  font-family: var(--font-main), sans-serif;
+  background: var(--bg);
+  font-family: var(--font-ibm-plex), sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1 {
+  font-size: clamp(1.75rem, 3.2vw, 3rem);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  font-weight: 700;
+}
+
+h2 {
+  font-size: clamp(1.35rem, 2vw, 2rem);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  font-weight: 700;
+}
+
+p {
+  line-height: 1.8;
+}
+
+::selection {
+  background: rgba(8, 145, 178, 0.18);
 }
 
 /* =========================
-   UTILITY HELPERS
+   REUSABLE UTILITY CLASSES
 ========================= */
+.gradient-primary {
+  background-image: var(--gradient-primary);
+}
+
+.gradient-primary-soft {
+  background-image: var(--gradient-primary-soft);
+}
+
+.text-gradient {
+  background-image: var(--gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
 
 .card {
-  background: var(--card);
-  border-radius: 16px;
-  padding: 16px;
+  background: var(--surface, #fff);
+  border: 1px solid var(--color-line, #e4edf2);
+  border-radius: 1.25rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.card-hover {
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+}
+.card-hover:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(8, 145, 178, 0.35);
 }
 
 .btn-primary {
-  background: var(--primary);
-  color: white;
-  padding: 10px 16px;
-  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-image: var(--gradient-primary);
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.85rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-glow);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, opacity 0.25s ease;
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 45px -12px rgba(8, 145, 178, 0.6);
 }
 
-.btn-secondary {
-  background: var(--secondary);
-  color: white;
-  padding: 10px 16px;
-  border-radius: 10px;
+.btn-accent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-image: var(--gradient-accent);
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 12px 30px -12px rgba(225, 29, 72, 0.5);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.btn-accent:hover {
+  transform: translateY(-2px);
 }
 
-.btn-outlined {
-  border: 1px solid var(--neutral-300);
-  padding: 10px 16px;
-  border-radius: 10px;
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1.5px solid var(--color-primary, #0e7490);
+  color: var(--color-primary, #0e7490);
+  padding: 0.7rem 1.4rem;
+  border-radius: 0.85rem;
+  font-weight: 600;
   background: transparent;
+  transition: all 0.25s ease;
+}
+.btn-outline:hover {
+  background-image: var(--gradient-primary);
+  color: #fff;
+  border-color: transparent;
+  transform: translateY(-2px);
 }
 
+.focus-ring {
+  outline: none;
+}
+.focus-ring:focus-visible {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--color-primary, #0e7490);
+}
+
+/* Decorative blurred background blobs */
+.blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(70px);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0) translateX(0); }
+  50% { transform: translateY(-18px) translateX(10px); }
+}
+.animate-float-slow {
+  animation: float-slow 9s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-slow {
+    animation: none;
+  }
+}
 
 /* ======================
    CONTAINER SYSTEM
 ====================== */
 .container-custom {
-  padding-left: 10%;
-  padding-right: 10%;
+  width: 100%;
+  max-width: 1400px;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container-custom {
+    padding-inline: 5%;
+  }
 }
 
 @media (min-width: 1024px) {
   .container-custom {
-    padding-left: 15%;
-    padding-right: 15%;
+    padding-inline: 8%;
+  }
+}
+
+
+
+
+
+/* الشاشات الكبيرة */
+@media (max-width: 1024px) {
+  .btn-d {
+    display: none;
   }
 }
