@@ -67,7 +67,7 @@ export default async function Page({ params }: SchedulePageProps) {
             </Link>
 
             <a
-              href="tel:+966123456789"
+              href="tel:+972597715288"
               className="inline-flex items-center gap-2 rounded-xl border border-white/40 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
             >
               <Phone size={16} />
@@ -75,7 +75,7 @@ export default async function Page({ params }: SchedulePageProps) {
             </a>
 
             <a
-              href="https://wa.me/966123456789"
+              href="https://wa.me/970597715288"
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 rounded-xl bg-whatsapp px-4 py-2.5 text-sm font-semibold text-white transition hover:-translate-y-0.5"

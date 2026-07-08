@@ -23,7 +23,7 @@ const BOOKING_CONTACT = {
   email: { display: "info@pah.ps", href: "mailto:info@pah.ps" },
   whatsapp: {
     display: "00970597715288",
-    href: "https://wa.me/972597712885",
+    href: "https://wa.me/970597715288",
   },
 } as const;
 

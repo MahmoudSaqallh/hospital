@@ -256,7 +256,7 @@ export default function BookingPage() {
                     إدارة المواعيد
                   </Link>
                   <a
-                    href="https://wa.me/966123456789"
+                    href="https://wa.me/970597715288"
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-whatsapp px-4 py-2.5 text-sm font-semibold text-white transition hover:-translate-y-0.5"

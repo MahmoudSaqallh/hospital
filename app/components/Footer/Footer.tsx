@@ -87,7 +87,7 @@ export default function Footer() {
               <li>
                 <a
                   className="mt-1 inline-flex items-center gap-2 rounded-xl bg-whatsapp/90 px-4 py-2 text-sm font-semibold text-white transition hover:bg-whatsapp"
-                  href="https://wa.me/966123456789"
+                  href="https://wa.me/970597715288"
                   target="_blank"
                   rel="noreferrer"
                 >
