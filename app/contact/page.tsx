@@ -17,8 +17,8 @@ const BOOKING_CONTACT = {
   title: "للحجز والاستفسار",
   description: "تواصل معنا لحجز موعد أو طرح أي استفسار طبي.",
   phones: [
-    { display: "0597706883", href: "tel:+972597712885" },
-    { display: "0597715288", href: "tel:+972597715288" },
+    { display: "0597706883", href: "tel:0597706883" },
+    { display: "0597715288", href: "tel:0597715288" },
   ],
   email: { display: "info@pah.ps", href: "mailto:info@pah.ps" },
   whatsapp: {
