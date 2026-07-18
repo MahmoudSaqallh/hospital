@@ -20,18 +20,38 @@ const itemVariants: Variants = {
 type GroupProps = {
   children: ReactNode;
   className?: string;
+  /** Prefer animate (default) so async-loaded cards never stay invisible */
+  mode?: "animate" | "inView";
   once?: boolean;
 };
 
 /** Container that staggers the reveal of its <StaggerItem> children. */
-export function StaggerGroup({ children, className, once = true }: GroupProps) {
+export function StaggerGroup({
+  children,
+  className,
+  mode = "animate",
+  once = true,
+}: GroupProps) {
+  if (mode === "inView") {
+    return (
+      <motion.div
+        className={className}
+        variants={groupVariants}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once, amount: 0.05, margin: "0px 0px -40px 0px" }}
+      >
+        {children}
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       className={className}
       variants={groupVariants}
       initial="hidden"
-      whileInView="show"
-      viewport={{ once, margin: "-60px" }}
+      animate="show"
     >
       {children}
     </motion.div>

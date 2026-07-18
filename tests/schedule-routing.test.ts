@@ -12,7 +12,7 @@ describe("schedule routing and data lookup", () => {
     expect(parseClinicId("0")).toBeNull();
   });
 
-  it("returns null when clinic id does not exist", () => {
-    expect(getClinicById(9999)).toBeNull();
+  it("returns null when clinic id does not exist", async () => {
+    expect(await getClinicById(9999)).toBeNull();
   });
 });

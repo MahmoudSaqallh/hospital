@@ -32,6 +32,7 @@ type Props = {
   color: string;
   doctors: DoctorModel[];
   branch?: string;
+  floor?: string;
 };
 
 // Map the JSON icon names to lucide-react icons (they render reliably,
@@ -62,10 +63,12 @@ export default function ClinicCard({
   color,
   doctors,
   branch = "الفرع الرئيسي",
+  floor,
 }: Props) {
   const availability = clinicAvailabilityHint(doctors);
   const Icon = ICONS[icon] ?? Stethoscope;
   const isAvailable = availability.includes("متاح");
+  const locationLabel = floor ? `الطابق ${floor}` : branch;
 
   return (
     <div className="group card card-hover relative flex h-full flex-col overflow-hidden p-5 sm:p-6">
@@ -102,7 +105,7 @@ export default function ClinicCard({
         </div>
         <div className="flex items-center justify-center gap-1.5 rounded-xl bg-primary/5 px-3 py-2">
           <MapPin size={14} className="text-primary" />
-          <span className="truncate font-semibold text-ink">{branch}</span>
+          <span className="truncate font-semibold text-ink">{locationLabel}</span>
         </div>
       </div>
 

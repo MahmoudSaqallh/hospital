@@ -12,14 +12,19 @@ export type ClinicCardModel = {
   color: string;
   group: ClinicGroup;
   branch?: string;
+  floor?: string;
+  relevance?: number;
 };
 
 export type DoctorScheduleValue = string;
 
 export type DoctorModel = {
+  id?: number;
   name: string;
   photo?: string;
   schedule: Record<string, DoctorScheduleValue>;
+  weeklyOff?: number[];
+  effectiveFloor?: number;
 };
 
 export type ClinicScheduleModel = {
@@ -32,6 +37,7 @@ export type ClinicScheduleModel = {
 
 export type UnifiedClinicModel = ClinicCardModel & {
   doctors: DoctorModel[];
+  floor?: string;
 };
 
 export function filterClinics<T extends ClinicCardModel>(

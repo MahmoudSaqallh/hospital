@@ -1,17 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
 import {
   Briefcase,
   CalendarCheck,
   CheckCircle2,
-  Clock,
   Mail,
   MapPin,
   MessageCircle,
+  Paperclip,
   PhoneCall,
   Send,
 } from "lucide-react";
+import { apiForm, ApiError } from "@/lib/api";
+import { useToast } from "@/app/components/ToastProvider";
 
 const BOOKING_CONTACT = {
   title: "للحجز والاستفسار",
@@ -32,11 +36,55 @@ const PROJECTS_CONTACT = {
   description: "للاستفسار عن المشاريع والشراكات والتعاون المؤسسي.",
   phones: [{ display: "0597706883", href: "tel:+972597706883" }],
   email: { display: "project@pah.ps", href: "mailto:project@pah.ps" },
-  
 } as const;
 
-type ContactState = "idle" | "success";
+type ContactState = "idle" | "success" | "loading";
 type SectionAccent = "primary" | "accent";
+
+type ContactTile = {
+  key: string;
+  href: string;
+  label: string;
+  display: string;
+  icon: typeof PhoneCall;
+  external?: boolean;
+  dir?: "ltr" | "rtl";
+};
+
+function ContactTileCard({
+  tile,
+  borderClass,
+  bgClass,
+  iconWrapClass,
+}: {
+  tile: ContactTile;
+  borderClass: string;
+  bgClass: string;
+  iconWrapClass: string;
+}) {
+  const Icon = tile.icon;
+  return (
+    <a
+      href={tile.href}
+      target={tile.external ? "_blank" : undefined}
+      rel={tile.external ? "noreferrer" : undefined}
+      dir={tile.dir}
+      className={`group relative flex min-h-[4.5rem] flex-row items-center gap-4 overflow-hidden rounded-2xl border-2 ${borderClass} bg-gradient-to-br ${bgClass} p-4 shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl sm:p-5`}
+    >
+      <span
+        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-white shadow-md ${iconWrapClass}`}
+      >
+        <Icon size={22} />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-medium text-muted">{tile.label}</p>
+        <p className="mt-0.5 break-all text-lg font-bold tracking-wide text-ink sm:text-xl">
+          {tile.display}
+        </p>
+      </div>
+    </a>
+  );
+}
 
 function ContactInfoSection({
   title,
@@ -56,18 +104,52 @@ function ContactInfoSection({
   icon: typeof CalendarCheck;
 }) {
   const isPrimary = accent === "primary";
-  const borderClass = isPrimary ? "border-primary" : "border-accent";
-  const topBarClass = isPrimary ? "gradient-primary" : "bg-accent";
+  // الحجز والاستفسار: أخضر العلامة | المشاريع: أحمر accent
+  const borderClass = isPrimary ? "border-[#0e6c09]" : "border-accent";
+  const topBarClass = isPrimary
+    ? "bg-gradient-to-l from-[#022400] via-[#0e6c09] to-[#199e3f]"
+    : "bg-accent";
   const bgClass = isPrimary
-    ? "from-primary/10 via-white to-primary/5 shadow-primary/10 hover:shadow-primary/20"
+    ? "from-[#0e6c09]/10 via-white to-[#199e3f]/5 shadow-[#0e6c09]/10 hover:shadow-[#0e6c09]/20"
     : "from-accent/10 via-white to-accent/5 shadow-accent/10 hover:shadow-accent/20";
-  const labelClass = isPrimary ? "text-primary" : "text-accent";
-  const iconWrapClass = isPrimary ? "gradient-primary" : "bg-accent";
+  const iconWrapClass = isPrimary
+    ? "bg-gradient-to-br from-[#0e6c09] to-[#199e3f]"
+    : "bg-accent";
+
+  const tiles: ContactTile[] = [
+    ...phones.map((phone, index) => ({
+      key: `phone-${phone.display}`,
+      href: phone.href,
+      label: phones.length > 1 ? `هاتف ${index + 1}` : "هاتف",
+      display: phone.display,
+      icon: PhoneCall,
+      dir: "ltr" as const,
+    })),
+    {
+      key: "email",
+      href: email.href,
+      label: "البريد الإلكتروني",
+      display: email.display,
+      icon: Mail,
+      dir: "ltr" as const,
+    },
+  ];
+
+  if (whatsapp) {
+    tiles.push({
+      key: "whatsapp",
+      href: whatsapp.href,
+      label: "واتساب",
+      display: whatsapp.display,
+      icon: MessageCircle,
+      external: true,
+      dir: "ltr",
+    });
+  }
 
   return (
     <section className={`card relative overflow-hidden border-2 ${borderClass} p-6 sm:p-8`}>
       <div className={`absolute inset-x-0 top-0 h-1.5 ${topBarClass}`} />
-
       <div className="flex items-start gap-4">
         <span
           className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-white shadow-md ${iconWrapClass}`}
@@ -79,86 +161,33 @@ function ContactInfoSection({
           <p className="mt-1 text-sm text-muted">{description}</p>
         </div>
       </div>
-
-      <div className={`mt-6 grid gap-4 ${phones.length > 1 ? "sm:grid-cols-2" : ""}`}>
-        {phones.map((phone) => (
-          <a
-            key={phone.display}
-            href={phone.href}
-            dir="ltr"
-            className={`group relative overflow-hidden rounded-2xl border-2 ${borderClass} bg-gradient-to-br ${bgClass} p-5 shadow-lg transition hover:-translate-y-1 hover:shadow-xl`}
-          >
-            <div className="flex items-center gap-4">
-              <span
-                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-white shadow-md transition group-hover:scale-110 ${iconWrapClass}`}
-              >
-                <PhoneCall size={22} />
-              </span>
-              <span className="text-right">
-                
-                <span className="mt-1 block text-lg font-bold tracking-wide text-ink sm:text-xl">
-                  {phone.display}
-                </span>
-                <span className="mt-1 block text-xs text-muted">اضغط للاتصال مباشرة</span>
-              </span>
-            </div>
-          </a>
+      <div className="mt-6 grid grid-cols-1 gap-3">
+        {tiles.map((tile) => (
+          <ContactTileCard
+            key={tile.key}
+            tile={tile}
+            borderClass={borderClass}
+            bgClass={bgClass}
+            iconWrapClass={iconWrapClass}
+          />
         ))}
-      </div>
-
-      <div className={`mt-4 grid gap-4 ${whatsapp ? "sm:grid-cols-2" : ""}`}>
-        <a
-          href={email.href}
-          dir="ltr"
-          className={`group flex items-center gap-4 rounded-2xl border-2 ${borderClass} bg-gradient-to-br ${bgClass} p-5 shadow-lg transition hover:-translate-y-1 hover:shadow-xl`}
-        >
-          <span
-            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-white shadow-md transition group-hover:scale-110 ${iconWrapClass}`}
-          >
-            <Mail size={22} />
-          </span>
-          <span className="text-right">
-         
-            <span className="mt-1 block text-lg font-bold text-ink sm:text-xl">{email.display}</span>
-            <span className="mt-1 block text-xs text-muted">اضغط لإرسال بريد</span>
-          </span>
-        </a>
-
-        {whatsapp ? (
-          <a
-            href={whatsapp.href}
-            target="_blank"
-            rel="noreferrer"
-            dir="ltr"
-            className="group flex items-center gap-4 rounded-2xl border-2 border-[#25d366] bg-gradient-to-br from-[#25d366]/10 via-white to-[#25d366]/5 p-5 shadow-lg shadow-[#25d366]/10 transition hover:-translate-y-1 hover:shadow-xl hover:shadow-[#25d366]/20"
-          >
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-whatsapp text-white shadow-md transition group-hover:scale-110">
-              <MessageCircle size={22} />
-            </span>
-            <span className="text-right">
-          
-              <span className="mt-1 block text-lg font-bold text-ink sm:text-xl">{whatsapp.display}</span>
-              <span className="mt-1 block text-xs text-muted">اضغط لفتح المحادثة</span>
-            </span>
-          </a>
-        ) : null}
       </div>
     </section>
   );
 }
 
 export default function ContactPage() {
-  const [status, setStatus] = useState<ContactState>("idle");
+  const { data: session, status: authStatus } = useSession();
+  const toast = useToast();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
+  const [attachment, setAttachment] = useState<File | null>(null);
+  const [status, setStatus] = useState<ContactState>("idle");
   const [error, setError] = useState("");
 
   return (
-    <section className="relative overflow-hidden py-10 sm:py-16">
-      <div className="blob animate-float-slow -right-24 -top-24 h-72 w-72 bg-primary-lighter/40" />
-      <div className="blob -left-20 top-40 h-64 w-64 bg-accent/20" />
-
+    <section className="relative overflow-hidden py-10 sm:py-14">
       <div className="container-custom relative">
         <div className="mx-auto max-w-2xl text-center">
           <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
@@ -181,7 +210,6 @@ export default function ContactPage() {
             accent="primary"
             icon={CalendarCheck}
           />
-
           <ContactInfoSection
             title={PROJECTS_CONTACT.title}
             description={PROJECTS_CONTACT.description}
@@ -193,7 +221,7 @@ export default function ContactPage() {
 
           <form
             className="card relative overflow-hidden p-6 sm:p-8"
-            onSubmit={(event) => {
+            onSubmit={async (event) => {
               event.preventDefault();
               if (name.trim().length < 3) {
                 setError("الاسم يجب أن يكون 3 أحرف على الأقل.");
@@ -207,21 +235,58 @@ export default function ContactPage() {
                 setError("الشكوى قصيرة جدا. أضف تفاصيل أكثر.");
                 return;
               }
+              if (attachment) {
+                const okType =
+                  attachment.type.startsWith("image/") ||
+                  attachment.type === "application/pdf";
+                if (!okType) {
+                  setError("المرفق يجب أن يكون صورة أو ملف PDF.");
+                  return;
+                }
+                if (attachment.size > 8 * 1024 * 1024) {
+                  setError("حجم المرفق كبير جداً (الحد 8 ميجا).");
+                  return;
+                }
+              }
+              if (authStatus !== "authenticated" || !session?.accessToken) {
+                setError("يجب تسجيل الدخول لإرسال الشكوى عبر النظام.");
+                return;
+              }
               setError("");
-              setStatus("success");
+              setStatus("loading");
+              try {
+                const formData = new FormData();
+                formData.append("subject", `شكوى من ${name.trim()}`);
+                formData.append(
+                  "message",
+                  `${message.trim()}\n\nالجوال: ${phone.trim()}`,
+                );
+                if (attachment) {
+                  formData.append("attachment", attachment);
+                }
+                await apiForm("/complaints", formData, {
+                  token: session.accessToken,
+                });
+                setStatus("success");
+                setMessage("");
+                setAttachment(null);
+                toast.success("تم إرسال شكواك بنجاح. سيتم متابعتها قريباً.");
+              } catch (err) {
+                setStatus("idle");
+                setError(err instanceof ApiError ? err.message : "تعذر إرسال الشكوى.");
+              }
             }}
           >
             <div className="absolute inset-x-0 top-0 h-1.5 gradient-primary" />
-            <div className="flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                <MessageCircle size={20} />
-              </span>
-              <div>
-                <h2 className="text-ink">صندوق الشكاوى</h2>
-                <p className="text-sm text-muted">اكتب شكواك وسنعمل على معالجتها في أقرب وقت.</p>
-              </div>
-            </div>
-
+            <h2 className="text-ink">صندوق الشكاوى</h2>
+            {authStatus !== "authenticated" ? (
+              <p className="mt-4 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                <Link href="/login?callbackUrl=/contact" className="font-bold underline">
+                  سجّل دخولك
+                </Link>{" "}
+                أولاً لإرسال الشكوى للنظام.
+              </p>
+            ) : null}
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               <label className="text-sm font-semibold text-ink">
                 الاسم
@@ -229,19 +294,17 @@ export default function ContactPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  placeholder="اكتب اسمك الكامل"
-                  className="mt-1.5 w-full rounded-xl border border-line bg-canvas px-4 py-3 text-sm outline-none transition focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20"
+                  className="mt-1.5 w-full rounded-xl border border-line bg-canvas px-4 py-3 text-sm outline-none"
                 />
               </label>
               <label className="text-sm font-semibold text-ink">
-             
+                الجوال
                 <input
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   required
                   dir="ltr"
-                  placeholder="05xxxxxxxx"
-                  className="mt-1.5 w-full rounded-xl border border-line bg-canvas px-4 py-3 text-right text-sm outline-none transition focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20"
+                  className="mt-1.5 w-full rounded-xl border border-line bg-canvas px-4 py-3 text-right text-sm outline-none"
                 />
               </label>
             </div>
@@ -252,40 +315,45 @@ export default function ContactPage() {
                 onChange={(e) => setMessage(e.target.value)}
                 required
                 rows={5}
-                placeholder="اشرح لنا التفاصيل..."
-                className="mt-1.5 w-full resize-none rounded-xl border border-line bg-canvas px-4 py-3 text-sm outline-none transition focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20"
+                className="mt-1.5 w-full resize-none rounded-xl border border-line bg-canvas px-4 py-3 text-sm outline-none"
               />
             </label>
-
-            <button type="submit" className="btn-primary mt-6 w-full sm:w-auto">
+            <label className="mt-4 block text-sm font-semibold text-ink">
+              مرفق (صورة أو PDF)
+              <div className="mt-1.5 flex items-center gap-3 rounded-xl border border-dashed border-line bg-canvas px-4 py-3">
+                <Paperclip size={18} className="shrink-0 text-primary" />
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,.pdf"
+                  onChange={(e) => setAttachment(e.target.files?.[0] ?? null)}
+                  className="w-full text-sm text-muted file:me-3 file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-primary"
+                />
+              </div>
+              {attachment ? (
+                <p className="mt-1.5 text-xs text-muted">{attachment.name}</p>
+              ) : (
+                <p className="mt-1.5 text-xs text-muted">اختياري — حتى 8 ميجا</p>
+              )}
+            </label>
+            <button type="submit" className="btn-primary mt-6" disabled={status === "loading"}>
               <Send size={16} />
-              إرسال الشكوى
+              {status === "loading" ? "جاري الإرسال..." : "إرسال الشكوى"}
             </button>
-
             {status === "success" ? (
-              <p className="mt-4 inline-flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700">
+              <p className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-emerald-700">
                 <CheckCircle2 size={16} />
                 تم استلام شكواك بنجاح.
               </p>
             ) : null}
-            {error ? (
-              <p className="mt-4 rounded-xl bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700">{error}</p>
-            ) : null}
+            {error ? <p className="mt-4 text-sm text-rose-700">{error}</p> : null}
           </form>
 
-          <div className="card overflow-hidden p-6 sm:p-8">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="flex items-center gap-2 text-ink">
-                <MapPin size={20} className="text-primary" />
-                الموقع
-              </h2>
-             
-            </div>
-            <p className="mt-3 text-sm text-muted">المبنى الرئيسي: غزة شارع عمر المختار - خلف محطة الحجاز</p>
-            <p className="mt-3 text-sm text-muted">مبنى القلب: غزة- شمال ترخيص السامر - بجوار مسجد الاسي</p>
-            <div className="mt-4 flex h-40 items-center justify-center rounded-2xl border border-dashed border-line bg-primary/5 p-4 text-center text-xs text-muted">
-              خريطة تفاعلية ستضاف هنا (Google Maps/Mapbox) مع إحداثيات الفروع.
-            </div>
+          <div className="card p-6 sm:p-8">
+            <h2 className="flex items-center gap-2 text-ink">
+              <MapPin size={20} className="text-primary" />
+              الموقع
+            </h2>
+            <p className="mt-3 text-sm text-muted">المبنى الرئيسي: غزة شارع عمر المختار</p>
           </div>
         </div>
       </div>

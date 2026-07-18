@@ -1,10 +1,10 @@
 "use client";
 
 import ClinicCard from "../../../components/ClinicCard";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
-import { clinics } from "@/lib/data";
-import { filterClinics, type CardFilter } from "@/lib/clinic";
+import { fetchClinics } from "@/lib/data";
+import { filterClinics, type CardFilter, type UnifiedClinicModel } from "@/lib/clinic";
 import EmptyState from "@/app/components/ui/EmptyState";
 import Link from "next/link";
 import { trackEvent } from "@/lib/analytics";
@@ -13,8 +13,34 @@ import SectionHeader from "@/app/components/ui/SectionHeader";
 import { StaggerGroup, StaggerItem } from "@/app/components/motion/Stagger";
 
 export default function Cards() {
+  const [clinics, setClinics] = useState<UnifiedClinicModel[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [filter, setFilter] = useState<CardFilter>("all");
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setLoadError(false);
+    fetchClinics()
+      .then((list) => {
+        if (cancelled) return;
+        setClinics(list);
+        setLoadError(false);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setClinics([]);
+        setLoadError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const buttons: { id: CardFilter; label: string }[] = [
     { id: "all", label: "الكل" },
@@ -79,50 +105,70 @@ export default function Cards() {
           </div>
         </div>
 
-        <StaggerGroup
-          key={filter}
-          className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
-        >
-          {filtered.map((item) => (
-            <StaggerItem key={item.id} className="h-full">
-              <ClinicCard
-                id={item.id}
-                title={item.title}
-                desc={item.desc}
-                icon={item.icon}
-                color={item.color}
-                doctors={item.doctors}
-                branch={item.branch}
-              />
-            </StaggerItem>
-          ))}
-        </StaggerGroup>
+        {loading ? (
+          <p className="py-10 text-center text-sm text-muted">جاري تحميل العيادات...</p>
+        ) : (
+          <>
+            <StaggerGroup
+              key={`${filter}-${clinics.length}`}
+              className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+            >
+              {filtered.map((item) => (
+                <StaggerItem key={item.id} className="h-full">
+                  <ClinicCard
+                    id={item.id}
+                    title={item.title}
+                    desc={item.desc}
+                    icon={item.icon}
+                    color={item.color}
+                    doctors={item.doctors}
+                    branch={item.branch}
+                    floor={item.floor}
+                  />
+                </StaggerItem>
+              ))}
+            </StaggerGroup>
 
-        {filtered.length === 0 ? (
-          <div className="mt-8">
-            <EmptyState
-              title="لا توجد نتائج مطابقة"
-              description="جرّب تعديل كلمات البحث أو اختيار تصنيف آخر. يمكنك أيضا استعراض جميع العيادات."
-              action={
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearch("");
-                    setFilter("all");
-                  }}
-                  className="btn-primary text-sm"
-                >
-                  إعادة تعيين البحث
-                </button>
-              }
-            />
-            <div className="mt-4 text-center">
-              <Link href="/clinics" className="text-sm font-semibold text-primary underline-offset-4 hover:underline">
-                عرض دليل العيادات الكامل
-              </Link>
-            </div>
-          </div>
-        ) : null}
+            {filtered.length === 0 ? (
+              <div className="mt-8">
+                <EmptyState
+                  title={loadError ? "تعذر تحميل العيادات" : "لا توجد نتائج مطابقة"}
+                  description={
+                    loadError
+                      ? "تحقق من اتصال الخادم ثم أعد المحاولة."
+                      : clinics.length === 0
+                        ? "لا توجد أقسام مضافة بعد. أضف قسماً من لوحة التحكم."
+                        : "جرّب تعديل كلمات البحث أو اختيار تصنيف آخر. يمكنك أيضا استعراض جميع العيادات."
+                  }
+                  action={
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearch("");
+                        setFilter("all");
+                        if (loadError || clinics.length === 0) {
+                          setLoading(true);
+                          setLoadError(false);
+                          fetchClinics()
+                            .then(setClinics)
+                            .finally(() => setLoading(false));
+                        }
+                      }}
+                      className="btn-primary text-sm"
+                    >
+                      {loadError || clinics.length === 0 ? "إعادة المحاولة" : "إعادة تعيين البحث"}
+                    </button>
+                  }
+                />
+                <div className="mt-4 text-center">
+                  <Link href="/clinics" className="text-sm font-semibold text-primary underline-offset-4 hover:underline">
+                    عرض دليل العيادات الكامل
+                  </Link>
+                </div>
+              </div>
+            ) : null}
+          </>
+        )}
       </div>
     </section>
   );

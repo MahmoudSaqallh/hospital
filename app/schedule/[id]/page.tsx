@@ -27,7 +27,7 @@ export default async function Page({ params }: SchedulePageProps) {
     notFound();
   }
 
-  const department = getClinicById(numericId);
+  const department = await getClinicById(numericId);
 
   if (!department) {
     notFound();
@@ -51,7 +51,9 @@ export default async function Page({ params }: SchedulePageProps) {
             <div>
               <h1 className="text-white">{department.title}</h1>
               <p className="mt-1 text-sm text-white/85">{department.desc}</p>
-              {department.branch ? (
+              {department.floor ? (
+                <p className="mt-1 text-xs text-white/75">الطابق {department.floor}</p>
+              ) : department.branch ? (
                 <p className="mt-1 text-xs text-white/75">{department.branch}</p>
               ) : null}
             </div>
@@ -104,14 +106,26 @@ export default async function Page({ params }: SchedulePageProps) {
           {department.doctors.map((doc, index) => (
             <Reveal key={doc.name} delay={index * 0.05}>
               <div className="card card-hover p-5 sm:p-6">
-                <div className="mb-5 flex flex-wrap items-center gap-5 border-b border-line pb-5">
-                  <DoctorPhoto name={doc.name} photo={doc.photo} size="lg" />
-                  <div>
-                    <h2 className="text-base font-bold text-ink sm:text-xl">{doc.name}</h2>
-                    <p className="mt-1 text-sm font-medium text-primary sm:text-base">
-                      استشاري قسم {department.title}
-                    </p>
+                <div className="mb-5 flex flex-wrap items-center justify-between gap-5 border-b border-line pb-5">
+                  <div className="flex flex-wrap items-center gap-5">
+                    <DoctorPhoto name={doc.name} photo={doc.photo} size="lg" />
+                    <div>
+                      <h2 className="text-base font-bold text-ink sm:text-xl">{doc.name}</h2>
+                      <p className="mt-1 text-sm font-medium text-primary sm:text-base">
+                        استشاري قسم {department.title}
+                      </p>
+                      {doc.effectiveFloor != null ? (
+                        <p className="mt-1 text-xs text-muted">الطابق {doc.effectiveFloor}</p>
+                      ) : null}
+                    </div>
                   </div>
+                  <Link
+                    href={`/booking?clinic=${department.id}&doctor=${doc.id}`}
+                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white transition hover:-translate-y-0.5"
+                  >
+                    <CalendarDays size={16} />
+                    احجز مع هذا الطبيب
+                  </Link>
                 </div>
 
                 <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2 sm:text-sm lg:grid-cols-3">

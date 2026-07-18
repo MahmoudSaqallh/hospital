@@ -1,0 +1,2 @@
+# Keep this folder for local user storage.
+# Real accounts are written to users.json at runtime.

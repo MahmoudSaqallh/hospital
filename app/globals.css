@@ -214,10 +214,112 @@ p {
   100% { transform: translateX(100%); }
 }
 
+/* =========================
+   LOADING CHROME HIDE
+========================= */
+html.is-loading {
+  overflow: hidden;
+}
+
+html.is-loading [data-chrome] {
+  display: none !important;
+}
+
+html.is-loading main {
+  padding-top: 0 !important;
+}
+
+/* =========================
+   LOADING SCREEN
+========================= */
+.loading-glow {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.2;
+}
+
+.loading-glow-red {
+  top: 12%;
+  right: 8%;
+  width: 12rem;
+  height: 12rem;
+  background: rgba(208, 21, 30, 0.18);
+  animation: loading-float 8s ease-in-out infinite;
+}
+
+.loading-glow-green {
+  bottom: 12%;
+  left: 8%;
+  width: 14rem;
+  height: 14rem;
+  background: rgba(25, 158, 63, 0.14);
+  animation: loading-float 10s ease-in-out infinite reverse;
+}
+
+.loading-brand-ring {
+  background: conic-gradient(
+    from 210deg,
+    #199e3f 0deg 115deg,
+    #d2151e 115deg 235deg,
+    #0f2233 235deg 360deg
+  );
+  animation: loading-spin 2.8s linear infinite;
+}
+
+.loading-overlay {
+  will-change: clip-path;
+}
+
+.loading-logo {
+  animation: loading-breathe 2.8s ease-in-out infinite;
+}
+
+.loading-progress {
+  width: 45%;
+  background: linear-gradient(90deg, #199e3f 0%, #d2151e 50%, #199e3f 100%);
+  background-size: 200% 100%;
+  animation: loading-progress 1.2s ease-in-out infinite, loading-shimmer 1.8s ease-in-out infinite;
+}
+
+@keyframes loading-shimmer {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.15); }
+}
+
+@keyframes loading-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes loading-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+@keyframes loading-float {
+  0%, 100% { transform: translateY(0) translateX(0); }
+  50% { transform: translateY(-14px) translateX(8px); }
+}
+
+@keyframes loading-progress {
+  0% { transform: translateX(-120%); width: 35%; }
+  50% { width: 65%; }
+  100% { transform: translateX(280%); width: 35%; }
+}
+
 /* Respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .animate-float-slow {
+  .animate-float-slow,
+  .loading-brand-ring,
+  .loading-logo,
+  .loading-progress,
+  .loading-glow-red,
+  .loading-glow-green {
     animation: none;
+  }
+
+  .loading-overlay {
+    transition: opacity 0.2s ease !important;
   }
 }
 

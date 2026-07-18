@@ -5,13 +5,35 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
+import { useSession, signOut } from "next-auth/react";
 import Logo from "../../../public/image/لوجو الصفحة.png";
-import { Menu, Phone, X } from "lucide-react";
+import { LogIn, LogOut, Menu, UserRound, X } from "lucide-react";
+import NotificationBell from "@/app/components/NotificationBell";
+
+function ProfileAvatar({ name }: { name?: string | null }) {
+  const initial = (name || "م").trim().charAt(0);
+
+  return (
+    <Link
+      href="/patient"
+      title={name || "بوابة المريض"}
+      aria-label={name || "بوابة المريض"}
+      className="inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-bold text-white shadow-sm ring-2 ring-primary/20 transition hover:ring-primary/40 hover:brightness-110"
+    >
+      {initial ? (
+        <span aria-hidden>{initial}</span>
+      ) : (
+        <UserRound size={18} />
+      )}
+    </Link>
+  );
+}
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+  const { data: session, status } = useSession();
 
   const navLinks = [
     { name: "الرئيسية", href: "/" },
@@ -19,6 +41,7 @@ export default function Navbar() {
     { name: "الحجز", href: "/booking" },
     { name: "بوابة المريض", href: "/patient" },
     { name: "عن الجمعية", href: "/about" },
+    { name: "تواصل معنا", href: "/contact" },
   ];
 
   useEffect(() => {
@@ -37,12 +60,10 @@ export default function Navbar() {
       }`}
     >
       <div className="container-custom">
-        {/* Top Bar */}
         <div className="flex items-center justify-between py-2 sm:py-2.5 gap-2">
-          {/* Logo */}
           <Link href="/" className="flex items-center gap-2 min-w-0 group">
-            <div className="relative shrink-0 ">
-              <Image src={Logo} alt="logo" width={70} height={70} className=" object-contain" />
+            <div className="relative shrink-0">
+              <Image src={Logo} alt="logo" width={70} height={70} className="object-contain" />
             </div>
             <h3 className="block text-[#000000] bg-clip-text bg-gradient-to-l from-primary to-primary-light font-bold text-sm sm:text-base md:text-lg lg:text-lg xl:text-xl leading-tight max-w-[210px]">
               جمعية الخدمة العامة
@@ -51,7 +72,6 @@ export default function Navbar() {
             </h3>
           </Link>
 
-          {/* Desktop Links */}
           <nav className="hidden lg:flex items-center gap-1 shrink-0">
             {navLinks.map((link) => {
               const active = pathname === link.href;
@@ -75,16 +95,31 @@ export default function Navbar() {
             })}
           </nav>
 
-          {/* Desktop CTA */}
-          <Link
-            href="/contact"
-           className="hidden lg:flex btn-primary text-base px-4 py-2.5 shrink-0 btn-d"
-          >
-            <Phone size={16} />
-            تواصل معنا
-          </Link>
+          <div className="hidden lg:flex items-center gap-2 shrink-0">
+            {status === "authenticated" && session?.user ? (
+              <>
+                <NotificationBell />
+                <ProfileAvatar name={session.user.name} />
+                <button
+                  type="button"
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-line px-3 py-2 text-sm font-semibold text-ink transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+                >
+                  <LogOut size={16} />
+                  خروج
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-line px-3 py-2 text-sm font-semibold text-ink transition hover:border-primary/40 hover:bg-primary/5 hover:text-primary"
+              >
+                <LogIn size={16} />
+                تسجيل الدخول
+              </Link>
+            )}
+          </div>
 
-          {/* Mobile Icon */}
           <button
             onClick={() => setOpen(!open)}
             aria-label={open ? "إغلاق القائمة" : "فتح القائمة"}
@@ -94,7 +129,6 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* MOBILE MENU */}
         <AnimatePresence>
           {open ? (
             <motion.div
@@ -130,14 +164,39 @@ export default function Navbar() {
                   );
                 })}
 
-                <Link
-                  href="/contact"
-                  onClick={() => setOpen(false)}
-                  className="btn-primary mt-2 w-full py-3"
-                >
-                  <Phone size={16} />
-                  تواصل معنا
-                </Link>
+                {status === "authenticated" && session?.user ? (
+                  <>
+                    <div className="flex items-center justify-between gap-3 rounded-xl bg-primary/10 px-4 py-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <ProfileAvatar name={session.user.name} />
+                        <p className="truncate text-sm font-semibold text-primary">
+                          {session.user.name || "مريض"}
+                        </p>
+                      </div>
+                      <NotificationBell onNavigate={() => setOpen(false)} />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOpen(false);
+                        signOut({ callbackUrl: "/" });
+                      }}
+                      className="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 px-4 py-3 text-base font-semibold text-rose-600 transition hover:bg-rose-50"
+                    >
+                      <LogOut size={16} />
+                      تسجيل الخروج
+                    </button>
+                  </>
+                ) : (
+                  <Link
+                    href="/login"
+                    onClick={() => setOpen(false)}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-line px-4 py-3 text-base font-semibold text-ink transition hover:border-primary/40 hover:bg-primary/5"
+                  >
+                    <LogIn size={16} />
+                    تسجيل الدخول
+                  </Link>
+                )}
               </div>
             </motion.div>
           ) : null}
