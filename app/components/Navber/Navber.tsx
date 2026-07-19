@@ -55,8 +55,8 @@ export default function Navbar() {
     <header
       className={`fixed top-0 inset-x-0 z-[100] transition-all duration-300 ${
         scrolled
-          ? "bg-white/80 backdrop-blur-xl shadow-[0_8px_30px_-12px_rgba(15,34,51,0.15)] border-b border-white/60"
-          : "bg-white/60 backdrop-blur-md border-b border-transparent"
+          ? "bg-white/50 backdrop-blur-xl shadow-[0_8px_30px_-12px_rgba(15,34,51,0.12)] border-b border-white/40"
+          : "bg-white/30 backdrop-blur-md border-b border-transparent"
       }`}
     >
       <div className="container-custom">
@@ -80,7 +80,7 @@ export default function Navbar() {
                   key={link.href}
                   href={link.href}
                   className={`relative rounded-xl px-3.5 py-2 text-base font-medium transition-colors ${
-                    active ? "text-primary" : "text-ink/70 hover:text-primary"
+                    active ? "text-primary" : "text-black hover:text-primary"
                   }`}
                 >
                   {link.name}
@@ -155,7 +155,7 @@ export default function Navbar() {
                         className={`block rounded-xl px-4 py-3 text-lg transition focus-ring ${
                           active
                             ? "bg-primary/10 text-primary font-semibold"
-                            : "text-ink hover:text-primary hover:bg-primary/5"
+                            : "text-black hover:text-primary hover:bg-primary/5"
                         }`}
                       >
                         {link.name}

@@ -8,6 +8,7 @@ import ClinicCard from "@/app/components/ClinicCard";
 import type { CardFilter, UnifiedClinicModel } from "@/lib/clinic";
 import { filterClinics } from "@/lib/clinic";
 import EmptyState from "@/app/components/ui/EmptyState";
+import Dropdown from "@/app/components/ui/Dropdown";
 import { StaggerGroup, StaggerItem } from "@/app/components/motion/Stagger";
 
 export default function ClinicsPage() {
@@ -71,7 +72,7 @@ export default function ClinicsPage() {
         </div>
       </div>
 
-      <div className="mb-8 grid gap-3 rounded-2xl border border-line bg-white/85 p-4 shadow-sm backdrop-blur sm:grid-cols-3">
+      <div className="relative z-40 mb-8 grid gap-3 rounded-2xl border border-line bg-white/85 p-4 shadow-sm backdrop-blur sm:grid-cols-3">
         <div className="relative sm:col-span-1">
           <Search size={18} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-primary" />
           <input
@@ -81,25 +82,29 @@ export default function ClinicsPage() {
             className="w-full rounded-xl border border-line bg-white px-3 py-2.5 pr-10 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
           />
         </div>
-        <select
+        <Dropdown
+          aria-label="تصنيف العيادات"
           value={filter}
-          onChange={(event) => setFilter(event.target.value as CardFilter)}
-          className="rounded-xl border border-line bg-white px-3 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-        >
-          <option value="all">كل التصنيفات</option>
-          <option value="باطنية">باطنية</option>
-          <option value="جراحة">جراحة</option>
-          <option value="تشخيص">تشخيص</option>
-        </select>
-        <select
+          onChange={(next) => setFilter(next as CardFilter)}
+          options={[
+            { value: "all", label: "كل التصنيفات" },
+            { value: "باطنية", label: "باطنية" },
+            { value: "جراحة", label: "جراحة" },
+            { value: "تشخيص", label: "تشخيص" },
+          ]}
+        />
+        <Dropdown
+          aria-label="ترتيب العيادات"
           value={sortBy}
-          onChange={(event) => setSortBy(event.target.value as "relevant" | "available" | "alphabetical")}
-          className="rounded-xl border border-line bg-white px-3 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-        >
-          <option value="relevant">الأكثر صلة</option>
-          <option value="available">الأكثر توفرا</option>
-          <option value="alphabetical">ترتيب أبجدي</option>
-        </select>
+          onChange={(next) =>
+            setSortBy(next as "relevant" | "available" | "alphabetical")
+          }
+          options={[
+            { value: "relevant", label: "الأكثر صلة" },
+            { value: "available", label: "الأكثر توفرا" },
+            { value: "alphabetical", label: "ترتيب أبجدي" },
+          ]}
+        />
       </div>
 
       {loading ? (
@@ -108,7 +113,7 @@ export default function ClinicsPage() {
         <>
           <StaggerGroup
             key={`${filter}-${sortBy}-${clinics.length}`}
-            className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+            className="relative z-0 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
           >
             {filtered.map((clinic) => (
               <StaggerItem key={clinic.id} className="h-full">

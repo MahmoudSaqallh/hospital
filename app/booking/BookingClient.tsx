@@ -28,6 +28,7 @@ import {
 import { trackEvent } from "@/lib/analytics";
 import { ApiError } from "@/lib/api";
 import { useToast } from "@/app/components/ToastProvider";
+import Dropdown from "@/app/components/ui/Dropdown";
 
 type BookingStep = 1 | 2 | 3;
 
@@ -397,54 +398,50 @@ export default function BookingClient() {
         <AnimatePresence mode="wait">
           {step === 1 ? (
             <motion.div key="step1" {...panelMotion} className="card p-5 sm:p-6">
-              <label className="block text-sm font-semibold text-ink">
-                اختر العيادة
-                <select
-                  value={clinicId || clinic?.id || ""}
-                  onChange={(event) => {
-                    setClinicId(Number(event.target.value));
+              <div className="block text-sm font-semibold text-ink">
+                <span className="mb-1.5 block">اختر العيادة</span>
+                <Dropdown
+                  aria-label="اختر العيادة"
+                  value={String(clinicId || clinic?.id || "")}
+                  onChange={(next) => {
+                    setClinicId(Number(next));
                     setDoctorId(0);
                     setSlotKey("");
                     setSlots([]);
                     setDoctorFullOffer(null);
                   }}
-                  className="mt-1.5 w-full rounded-xl border border-line bg-white px-3 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                >
-                  {clinics.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.title}
-                      {item.floor ? ` — الطابق ${item.floor}` : ""}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  options={clinics.map((item) => ({
+                    value: String(item.id),
+                    label: item.floor
+                      ? `${item.title} — الطابق ${item.floor}`
+                      : item.title,
+                  }))}
+                />
+              </div>
 
-              <label className="mt-4 block text-sm font-semibold text-ink">
-                اختر الطبيب
-                <select
-                  value={doctorId || ""}
-                  onChange={(event) => {
-                    setDoctorId(Number(event.target.value));
+              <div className="mt-4 block text-sm font-semibold text-ink">
+                <span className="mb-1.5 block">اختر الطبيب</span>
+                <Dropdown
+                  aria-label="اختر الطبيب"
+                  value={doctorId ? String(doctorId) : ""}
+                  onChange={(next) => {
+                    setDoctorId(Number(next));
                     setSlotKey("");
                     setDoctorFullOffer(null);
                   }}
                   disabled={!doctors.length}
-                  className="mt-1.5 w-full rounded-xl border border-line bg-white px-3 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
-                >
-                  {!doctors.length ? (
-                    <option value="">لا يوجد أطباء في هذه العيادة</option>
-                  ) : (
-                    doctors.map((doc) => (
-                      <option key={doc.id} value={doc.id}>
-                        {doc.name}
-                        {doc.effectiveFloor != null
-                          ? ` — الطابق ${doc.effectiveFloor}`
-                          : ""}
-                      </option>
-                    ))
-                  )}
-                </select>
-              </label>
+                  placeholder={
+                    doctors.length ? "اختر الطبيب" : "لا يوجد أطباء في هذه العيادة"
+                  }
+                  options={doctors.map((doc) => ({
+                    value: String(doc.id),
+                    label:
+                      doc.effectiveFloor != null
+                        ? `${doc.name} — الطابق ${doc.effectiveFloor}`
+                        : doc.name,
+                  }))}
+                />
+              </div>
 
               {selectedDoctor ? (
                 <div className="mt-4 flex items-center gap-2 rounded-xl bg-primary/5 px-3 py-2 text-sm text-ink">
