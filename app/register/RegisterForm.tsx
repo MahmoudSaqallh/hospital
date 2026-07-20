@@ -7,6 +7,11 @@ import { signIn } from "next-auth/react";
 import { CreditCard, Phone, UserPlus, UserRound } from "lucide-react";
 import AuthShell from "@/app/components/auth/AuthShell";
 import OAuthButtons from "@/app/components/auth/OAuthButtons";
+import {
+  digitsOnly,
+  validatePatientNationalId,
+  validatePatientPhone,
+} from "@/lib/patientValidation";
 
 type RegisterFormProps = {
   googleEnabled: boolean;
@@ -30,6 +35,19 @@ export default function RegisterForm({
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     setError("");
+
+    const phoneCheck = validatePatientPhone(phone);
+    if (!phoneCheck.ok) {
+      setError(phoneCheck.error);
+      return;
+    }
+
+    const idCheck = validatePatientNationalId(nationalId);
+    if (!idCheck.ok) {
+      setError(idCheck.error);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -37,9 +55,9 @@ export default function RegisterForm({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name,
-          phone,
-          national_id: nationalId,
+          name: name.trim(),
+          phone: phoneCheck.value,
+          national_id: idCheck.value,
         }),
       });
 
@@ -53,8 +71,8 @@ export default function RegisterForm({
 
       const result = await signIn("credentials", {
         name: name.trim(),
-        phone: phone.trim(),
-        national_id: nationalId.trim(),
+        phone: phoneCheck.value,
+        national_id: idCheck.value,
         redirect: false,
         callbackUrl: "/",
       });
@@ -107,14 +125,18 @@ export default function RegisterForm({
             />
             <input
               value={phone}
-              onChange={(event) => setPhone(event.target.value)}
+              onChange={(event) => setPhone(digitsOnly(event.target.value, 10))}
               required
               autoComplete="tel"
               dir="ltr"
-              placeholder="05xxxxxxxx"
+              inputMode="numeric"
+              maxLength={10}
+              pattern="0(59|56)[0-9]{7}"
+              placeholder="059xxxxxxx"
               className={inputClass}
             />
           </div>
+          <p className="mt-1 text-xs text-muted">10 أرقام ويبدأ بـ 059 أو 056</p>
         </label>
 
         <label className="block text-sm font-semibold text-ink">
@@ -126,14 +148,17 @@ export default function RegisterForm({
             />
             <input
               value={nationalId}
-              onChange={(event) => setNationalId(event.target.value)}
+              onChange={(event) => setNationalId(digitsOnly(event.target.value, 10))}
               required
               inputMode="numeric"
               dir="ltr"
-              placeholder="xxxxxxxxxxx"
+              maxLength={10}
+              pattern="[0-9]{10}"
+              placeholder="xxxxxxxxxx"
               className={inputClass}
             />
           </div>
+          <p className="mt-1 text-xs text-muted">10 أرقام</p>
         </label>
 
         {error ? (

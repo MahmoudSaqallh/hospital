@@ -16,6 +16,10 @@ import {
 } from "lucide-react";
 import { apiForm, ApiError } from "@/lib/api";
 import { useToast } from "@/app/components/ToastProvider";
+import {
+  digitsOnly,
+  validatePatientPhone,
+} from "@/lib/patientValidation";
 
 const BOOKING_CONTACT = {
   title: "للحجز والاستفسار",
@@ -227,8 +231,9 @@ export default function ContactPage() {
                 setError("الاسم يجب أن يكون 3 أحرف على الأقل.");
                 return;
               }
-              if (phone.trim().length < 8) {
-                setError("رقم الجوال غير مكتمل.");
+              const phoneCheck = validatePatientPhone(phone);
+              if (!phoneCheck.ok) {
+                setError(phoneCheck.error);
                 return;
               }
               if (message.trim().length < 10) {
@@ -259,7 +264,7 @@ export default function ContactPage() {
                 formData.append("subject", `شكوى من ${name.trim()}`);
                 formData.append(
                   "message",
-                  `${message.trim()}\n\nالجوال: ${phone.trim()}`,
+                  `${message.trim()}\n\nالجوال: ${phoneCheck.value}`,
                 );
                 if (attachment) {
                   formData.append("attachment", attachment);
@@ -301,11 +306,17 @@ export default function ContactPage() {
                 الجوال
                 <input
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) => setPhone(digitsOnly(e.target.value, 10))}
                   required
                   dir="ltr"
+                  inputMode="numeric"
+                  maxLength={10}
+                  pattern="0(59|56)[0-9]{7}"
+                  placeholder="059xxxxxxx"
+                  autoComplete="tel"
                   className="mt-1.5 w-full rounded-xl border border-line bg-canvas px-4 py-3 text-right text-sm outline-none"
                 />
+                <p className="mt-1 text-xs text-muted">10 أرقام ويبدأ بـ 059 أو 056</p>
               </label>
             </div>
             <label className="mt-4 block text-sm font-semibold text-ink">

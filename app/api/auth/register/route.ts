@@ -1,25 +1,11 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import { api, ApiError } from "@/lib/api";
-
-const registerSchema = z.object({
-  name: z.string().trim().min(2, "الاسم قصير جداً"),
-  phone: z
-    .string()
-    .trim()
-    .min(9, "رقم الجوال غير صالح")
-    .regex(/^[0-9+\-\s]+$/, "رقم الجوال غير صالح"),
-  national_id: z
-    .string()
-    .trim()
-    .min(5, "رقم الهوية غير صالح")
-    .regex(/^[0-9]+$/, "رقم الهوية يجب أن يكون أرقاماً فقط"),
-});
+import { patientRegisterSchema } from "@/lib/patientValidation";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const parsed = registerSchema.safeParse(body);
+    const parsed = patientRegisterSchema.safeParse(body);
 
     if (!parsed.success) {
       const message = parsed.error.issues[0]?.message ?? "بيانات غير صالحة";

@@ -19,6 +19,18 @@ export type Appointment = {
   createdAt: string;
 };
 
+export const ACTIVE_BOOKING_STATUSES = new Set([
+  "pending",
+  "pending_payment",
+  "confirmed",
+]);
+
+export function findActivePatientBooking(appointments: Appointment[]) {
+  return appointments.find(
+    (item) => item.status && ACTIVE_BOOKING_STATUSES.has(item.status),
+  );
+}
+
 export type PaymentProvider =
   | "bank_of_palestine"
   | "palpay"
@@ -316,7 +328,8 @@ export async function fetchMyBookings(token: string): Promise<Appointment[]> {
     }>
   >("/bookings/me", { auth: true, token });
 
-  return rows.map((row) => {
+  return rows
+    .map((row) => {
     const at = new Date(row.appointment_at);
     return {
       id: String(row.id),
@@ -334,7 +347,12 @@ export async function fetchMyBookings(token: string): Promise<Appointment[]> {
       notes: row.notes ?? null,
       createdAt: row.created_at,
     };
-  });
+  })
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime() ||
+        Number(b.id) - Number(a.id),
+    );
 }
 
 /** localStorage helpers kept as no-ops for backward compatibility */

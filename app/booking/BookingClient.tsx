@@ -22,12 +22,20 @@ import {
   buildAppointmentAt,
   createBookingOnApi,
   fetchDoctorBookableSlots,
+  fetchMyBookings,
+  findActivePatientBooking,
+  type Appointment,
   type BookableSlot,
   type DoctorSlotAlternative,
 } from "@/lib/appointments";
 import { trackEvent } from "@/lib/analytics";
 import { ApiError } from "@/lib/api";
 import { useToast } from "@/app/components/ToastProvider";
+import {
+  digitsOnly,
+  validatePatientNationalId,
+  validatePatientPhone,
+} from "@/lib/patientValidation";
 import Dropdown from "@/app/components/ui/Dropdown";
 
 type BookingStep = 1 | 2 | 3;
@@ -80,11 +88,25 @@ export default function BookingClient() {
   const [confirmationId, setConfirmationId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [activeBooking, setActiveBooking] = useState<Appointment | null>(null);
+  const [activeBookingLoading, setActiveBookingLoading] = useState(false);
 
   useEffect(() => {
     if (session?.user?.phone) setPhone(session.user.phone);
     if (session?.user?.nationalId) setNationalId(session.user.nationalId);
   }, [session]);
+
+  useEffect(() => {
+    if (status !== "authenticated" || !session?.accessToken) {
+      setActiveBooking(null);
+      return;
+    }
+    setActiveBookingLoading(true);
+    fetchMyBookings(session.accessToken)
+      .then((items) => setActiveBooking(findActivePatientBooking(items) ?? null))
+      .catch(() => setActiveBooking(null))
+      .finally(() => setActiveBookingLoading(false));
+  }, [session, status]);
 
   useEffect(() => {
     fetchClinics().then((list) => {
@@ -248,9 +270,28 @@ export default function BookingClient() {
       return;
     }
 
+    const phoneCheck = validatePatientPhone(phone);
+    if (!phoneCheck.ok) {
+      setError(phoneCheck.error);
+      return;
+    }
+
+    const idCheck = validatePatientNationalId(nationalId);
+    if (!idCheck.ok) {
+      setError(idCheck.error);
+      return;
+    }
+
     const bookingDoctorId = selectedSlot.doctorId;
     if (!bookingDoctorId) {
       setError("تعذر تحديد الطبيب. تأكد من إضافة أطباء في الداشبورد.");
+      return;
+    }
+
+    if (activeBooking) {
+      setError(
+        "لديك حجز قائم لم يُستكمل بعد. يجب حضور الموعد وإتمامه قبل حجز موعد جديد.",
+      );
       return;
     }
 
@@ -264,8 +305,8 @@ export default function BookingClient() {
         doctorId: bookingDoctorId,
         appointmentAt,
         notes: `${selectedSlot.day} ${selectedSlot.date} ${selectedSlot.slot}`,
-        phone: phone.trim(),
-        nationalId: nationalId.trim(),
+        phone: phoneCheck.value,
+        nationalId: idCheck.value,
       });
 
       trackEvent({
@@ -296,6 +337,8 @@ export default function BookingClient() {
         });
         setStep(1);
         toast.error("الطبيب ممتلئ لهذا اليوم — اختر بديلاً أو اليوم التالي.");
+      } else if (err instanceof ApiError && err.payload?.code === "ACTIVE_BOOKING_EXISTS") {
+        toast.error(message);
       }
     } finally {
       setSubmitting(false);
@@ -353,6 +396,30 @@ export default function BookingClient() {
             تسجيل الدخول
           </Link>{" "}
           قبل تأكيد الحجز.
+        </div>
+      ) : null}
+
+      {status === "authenticated" && activeBookingLoading ? (
+        <p className="mt-4 text-center text-sm text-muted">جاري التحقق من حجوزاتك...</p>
+      ) : null}
+
+      {activeBooking ? (
+        <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-4 text-sm text-rose-900">
+          <p className="font-bold">لديك حجز قائم لم يُستكمل بعد</p>
+          <p className="mt-1">
+            {activeBooking.clinicTitle} — {activeBooking.doctorName} — {activeBooking.day}{" "}
+            {activeBooking.slot}
+          </p>
+          <p className="mt-2 text-rose-800">
+            يجب حضور هذا الموعد وإتمامه قبل حجز موعد جديد. بعد أن يُحدّث موظف الاستقبال
+            حالة الحجز إلى «مكتمل» يمكنك الحجز مجدداً.
+          </p>
+          <Link
+            href="/patient"
+            className="mt-3 inline-flex font-bold text-primary underline"
+          >
+            عرض مواعيدي (#{activeBooking.id})
+          </Link>
         </div>
       ) : null}
 
@@ -513,7 +580,7 @@ export default function BookingClient() {
                 type="button"
                 onClick={() => slotKey && setStep(2)}
                 className="btn-primary mt-6 w-full disabled:cursor-not-allowed disabled:opacity-50"
-                disabled={!slotKey}
+                disabled={!slotKey || !!activeBooking}
               >
                 التالي
                 <ArrowLeft size={18} />
@@ -549,14 +616,20 @@ export default function BookingClient() {
                   />
                   <input
                     value={phone}
-                    onChange={(event) => setPhone(event.target.value)}
+                    onChange={(event) => setPhone(digitsOnly(event.target.value, 10))}
                     required
                     autoComplete="tel"
                     dir="ltr"
-                    placeholder="05xxxxxxxx"
+                    inputMode="numeric"
+                    maxLength={10}
+                    pattern="0(59|56)[0-9]{7}"
+                    placeholder="059xxxxxxx"
                     className={inputClass}
                   />
                 </div>
+                <p className="mt-1 text-xs font-normal text-muted">
+                  10 أرقام ويبدأ بـ 059 أو 056
+                </p>
               </label>
 
               <label className="mt-3 block text-sm font-semibold text-ink">
@@ -568,14 +641,17 @@ export default function BookingClient() {
                   />
                   <input
                     value={nationalId}
-                    onChange={(event) => setNationalId(event.target.value)}
+                    onChange={(event) => setNationalId(digitsOnly(event.target.value, 10))}
                     required
                     inputMode="numeric"
                     dir="ltr"
-                    placeholder="xxxxxxxxxxx"
+                    maxLength={10}
+                    pattern="[0-9]{10}"
+                    placeholder="xxxxxxxxxx"
                     className={inputClass}
                   />
                 </div>
+                <p className="mt-1 text-xs font-normal text-muted">10 أرقام</p>
               </label>
 
               {error ? (
@@ -595,7 +671,8 @@ export default function BookingClient() {
                     submitting ||
                     status !== "authenticated" ||
                     !phone.trim() ||
-                    !nationalId.trim()
+                    !nationalId.trim() ||
+                    !!activeBooking
                   }
                 >
                   {submitting ? "جاري التأكيد..." : "تأكيد الحجز"}
